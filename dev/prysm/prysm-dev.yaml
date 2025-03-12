@@ -1,6 +1,6 @@
 participants:
-  - cl_type: "prysm"
-    cl_image: "prysm-beacon-chain-dev"
-    vc_type: "prysm"
-    vc_image: "prysm-validator-dev"
-    el_type: "geth"
+  - cl_type: prysm
+    cl_image: prysm-beacon-chain-dev
+    vc_type: prysm
+    vc_image: prysm-validator-dev
+    el_type: geth

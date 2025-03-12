@@ -14,5 +14,5 @@ By default, this setup uses official Prysm images. However, you can also use cus
 2. Run using the development configuration:
 
    ```bash
-   kurtosis run github.com/ethpandaops/ethereum-package --args-file dev/prysm/prysm-dev.yaml --args-file peerdas-base.yaml
+   ./kurtosis_run_args.sh dev/prysm/prysm-dev.yaml peerdas-base.yaml
    ```
