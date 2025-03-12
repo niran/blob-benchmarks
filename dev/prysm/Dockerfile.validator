@@ -1,0 +1,17 @@
+FROM --platform=linux/arm64 ubuntu:latest
+
+# Install required system packages and debugging tools
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ca-certificates \
+    curl \
+    net-tools \
+    netcat-openbsd \
+    iproute2 \
+    procps \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY bin/validator /usr/local/bin/validator
+
+ENTRYPOINT ["validator"] 
