@@ -40,15 +40,15 @@ participants:
     cl_image: ethpandaops/teku:nashatyrev-das-7109573
 network_params:
   genesis_delay: 1200
-  electra_fork_epoch: 0
-  fulu_fork_epoch: 0
+  electra_fork_epoch: 1
+  fulu_fork_epoch: 2
 snooper_enabled: true
 global_log_level: debug
 additional_services:
   - dora
+  - spamoor_blob
   - prometheus_grafana
   - blockscout
-  - spamoor_blob
 dora_params:
   image: ethpandaops/dora:peerdas-as-deneb-column-view-latest
   env: {"FRONTEND_SHOW_PEER_DAS_INFOS": "true", "FRONTEND_SHOW_SENSITIVE_PEER_INFOS": "true"}
