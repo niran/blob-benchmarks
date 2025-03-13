@@ -1,4 +1,6 @@
 participants:
+  # On a network with a single node, Prysm currently fails to run while it searches for peers.
+  # panic: runtime error: invalid memory address or nil pointer dereference
   - cl_type: prysm
     cl_image: prysm-beacon-chain-dev
     vc_type: prysm

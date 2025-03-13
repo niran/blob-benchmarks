@@ -1,0 +1,6 @@
+snooper_enabled: true
+global_log_level: debug
+additional_services:
+  - dora
+  - spamoor_blob
+  - prometheus_grafana

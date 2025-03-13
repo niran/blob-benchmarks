@@ -14,5 +14,5 @@ By default, this setup uses official Prysm images. However, you can also use cus
 2. Run using the development configuration:
 
    ```bash
-   ./kurtosis_run_args.sh dev/prysm/prysm-dev.yaml peerdas-base.yaml
+   ./kurtosis_run_args.sh kurtosis/fusaka/000-base.yaml dev/prysm/prysm-dev.yaml
    ```

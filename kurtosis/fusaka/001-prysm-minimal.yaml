@@ -8,14 +8,3 @@ participants:
     count: 3
 network_params:
   genesis_delay: 300
-  electra_fork_epoch: 1
-  fulu_fork_epoch: 2
-snooper_enabled: true
-global_log_level: debug
-additional_services:
-  - dora
-  - spamoor_blob
-  - prometheus_grafana
-  - blockscout
-dora_params:
-  image: ethpandaops/dora:fulu-support
