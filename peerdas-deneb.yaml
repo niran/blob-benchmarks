@@ -5,41 +5,9 @@ participants:
     supernode: true
     cl_extra_params:
       - --minimum-peers-per-subnet=1
-  - cl_type: lighthouse
-    cl_image: ethpandaops/lighthouse:peerdas-devnet-4-95cec45
-    supernode: true
-  - cl_type: teku
-    cl_image: ethpandaops/teku:nashatyrev-das-7109573
-    supernode: true
-  - cl_type: nimbus
-    cl_image: ethpandaops/nimbus-eth2:columns-afeef74
-    supernode: true
-    cl_extra_params:
-      - --sync-light-client=no
-  - cl_type: lodestar
-    cl_image: ethpandaops/lodestar:peerDAS-3e0a08f
-    supernode: true
-    cl_extra_params:
-      - --persistNetworkIdentity
-# Full nodes
-  - cl_type: prysm
-    cl_image: ethpandaops/prysm-beacon-chain:peerDAS-01705d1
-    cl_extra_params:
-      - --minimum-peers-per-subnet=1
-      - --data-columns-withhold-count=64
-  - cl_type: lighthouse
-    cl_image: ethpandaops/lighthouse:peerdas-devnet-4-95cec45
-  - cl_type: lodestar
-    cl_image: ethpandaops/lodestar:peerDAS-3e0a08f
-    cl_extra_params: [--persistNetworkIdentity]
-  - cl_type: nimbus
-    cl_image: ethpandaops/nimbus-eth2:columns-afeef74
-    cl_extra_params:
-      - --sync-light-client=no
-  - cl_type: teku
-    cl_image: ethpandaops/teku:nashatyrev-das-7109573
+    count: 3
 network_params:
-  genesis_delay: 1200
+  genesis_delay: 300
   electra_fork_epoch: 1
   fulu_fork_epoch: 2
 snooper_enabled: true
