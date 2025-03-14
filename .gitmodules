@@ -1,0 +1,4 @@
+[submodule "forks/kurtosis"]
+	path = forks/kurtosis
+	url = https://github.com/niran/kurtosis.git
+	branch = benchmarks-net-admin
