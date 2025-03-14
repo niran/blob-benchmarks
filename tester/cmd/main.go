@@ -1,0 +1,123 @@
+package main
+
+import (
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/niran/blob-benchmarks/tester"
+	"github.com/urfave/cli/v3"
+)
+
+func main() {
+	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelInfo, true)))
+
+	cmd := &cli.Command{
+		Name:   "blob-benchmarks",
+		Usage:  "Determine the networking limits of a reproducible Ethereum network simulation",
+		Action: minBandwidth,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "enclave",
+				Aliases: []string{"e"},
+				Usage:   "The name of a running enclave to use",
+			},
+		},
+		Commands: []*cli.Command{
+			{
+				Name:  "min-bandwidth",
+				Usage: "Determine the minimum bandwidth required for a given number of blobs per block",
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:    "blobs",
+						Aliases: []string{"b"},
+						Usage:   "The number of blobs per block",
+						Value:   6,
+					},
+					&cli.IntFlag{
+						Name:    "bandwidth",
+						Aliases: []string{"bw"},
+						Usage:   "The initial bandwidth in megabits per second",
+						Value:   50,
+					},
+					&cli.IntFlag{
+						Name:    "delta",
+						Aliases: []string{"d"},
+						Usage:   "The percentage to decrease the bandwidth by each iteration",
+						Value:   50,
+					},
+				},
+			},
+			{
+				Name:   "max-blobs",
+				Usage:  "Determine the maximum number of blobs per block that can be sustained by a node given a target bandwidth",
+				Action: maxBlobs,
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:    "bandwidth",
+						Aliases: []string{"bw"},
+						Usage:   "The target node's bandwidth in megabits per second",
+						Value:   50,
+					},
+					&cli.IntFlag{
+						Name:    "blobs",
+						Aliases: []string{"b"},
+						Usage:   "The initial number of blobs per block",
+						Value:   6,
+					},
+					&cli.IntFlag{
+						Name:    "delta",
+						Aliases: []string{"d"},
+						Usage:   "The percentage to increase the blob count by each iteration",
+						Value:   100,
+					},
+				},
+			},
+		},
+	}
+
+	err := cmd.Run(context.Background(), os.Args)
+	if err != nil {
+		log.Crit("Application failed", "error", err)
+	}
+}
+
+func minBandwidth(ctx context.Context, cmd *cli.Command) error {
+	log.Info("Starting blob-benchmarks")
+
+	enclaveContext, err := tester.GetEnclaveContext(ctx, cmd.String("enclave"))
+	if err != nil {
+		return err
+	}
+
+	// TODO: If we created an enclave, defer its deletion.
+	createdEnclave := false
+	if createdEnclave {
+		defer tester.CleanupEnclave(enclaveContext)
+	}
+
+	test := tester.NewMinBandwidthTest(enclaveContext, uint(cmd.Int("blobs")), uint(cmd.Int("bandwidth")), uint(cmd.Int("delta")))
+	testDoneChannel := make(chan struct{})
+	err = test.Run(testDoneChannel)
+	if err != nil {
+		return err
+	}
+
+	interruptChannel := make(chan os.Signal, 1)
+	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+
+	select {
+	case <-interruptChannel:
+		log.Info("Stopping test...")
+	case <-testDoneChannel:
+		log.Info("Test completed.")
+	}
+
+	return nil
+}
+
+func maxBlobs(ctx context.Context, cmd *cli.Command) error {
+	return nil
+}
