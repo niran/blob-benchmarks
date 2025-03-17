@@ -1,4 +1,8 @@
 #!/bin/bash
+# kurtosis_helper.sh
+# ------------------
+# This script is a helper for running Kurtosis commands. It allows you to specify the kurtosis binary path and
+# merge multiple YAML files together.
 
 # Default kurtosis binary path
 KURTOSIS_BIN="kurtosis"
