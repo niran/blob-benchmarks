@@ -2,43 +2,59 @@ package tester
 
 import (
 	"context"
+	"time"
 
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/kurtosis-tech/kurtosis/api/golang/core/lib/enclaves"
 	"github.com/pkg/errors"
 )
 
+const (
+	slotsPerEpoch = 32
+	slotDuration  = 12 * time.Second
+)
+
 type MinBandwidthTestConfig struct {
 	enclaveContext *enclaves.EnclaveContext
 	blobsPerBlock  uint
 	bandwidth      uint
+	minBandwidth   uint
 	delta          uint
 }
 
 type MinBandwidthTest struct {
 	cfg              MinBandwidthTestConfig
 	currentBandwidth uint
+	startTime        time.Time
 }
 
-func NewMinBandwidthTest(enclaveContext *enclaves.EnclaveContext, blobsPerBlock uint, bandwidth uint, delta uint) *MinBandwidthTest {
+func NewMinBandwidthTest(enclaveContext *enclaves.EnclaveContext, blobsPerBlock uint, bandwidth uint, minBandwidth uint, delta uint) *MinBandwidthTest {
 	return &MinBandwidthTest{
 		cfg: MinBandwidthTestConfig{
 			enclaveContext: enclaveContext,
 			blobsPerBlock:  blobsPerBlock,
 			bandwidth:      bandwidth,
+			minBandwidth:   minBandwidth,
 			delta:          delta,
 		},
 		currentBandwidth: bandwidth,
+		startTime:        time.Now(),
 	}
 }
 
-func NewMinBandwidthTestForOnlyEnclave(ctx context.Context, blobsPerBlock uint, bandwidth uint, delta uint) (*MinBandwidthTest, error) {
+func NewMinBandwidthTestForOnlyEnclave(ctx context.Context, blobsPerBlock uint, bandwidth uint, minBandwidth uint, delta uint) (*MinBandwidthTest, error) {
 	enclaveContext, err := GetOnlyEnclaveContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewMinBandwidthTest(enclaveContext, blobsPerBlock, bandwidth, delta), nil
+	return NewMinBandwidthTest(enclaveContext, blobsPerBlock, bandwidth, minBandwidth, delta), nil
+}
+
+func (t *MinBandwidthTest) getElapsedEpochs() uint {
+	timeSinceStart := time.Since(t.startTime)
+	slotsSinceStart := uint(timeSinceStart / slotDuration)
+	return slotsSinceStart / slotsPerEpoch
 }
 
 func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
@@ -59,17 +75,42 @@ func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 	}
 
 	// Set the download bandwidth to a reasonable fixed value.
-	if err := SetDownloadBandwidthControl(service, "100mbit"); err != nil {
+	if err := SetDownloadBandwidthControl(service, 100_000_000); err != nil {
 		return errors.Wrap(err, "failed to set download bandwidth control")
 	}
 
 	// Set the upload bandwith to a starting point for the tests.
-	if err := SetUploadBandwidthControl(service, "50mbit"); err != nil {
+	if err := SetUploadBandwidthControl(service, t.currentBandwidth); err != nil {
 		return errors.Wrap(err, "failed to set upload bandwidth control")
 	}
 
-	// TODO: Run the test.
+	reductionCount := uint(0)
+	ticker := time.NewTicker(slotDuration)
+	defer ticker.Stop()
 
-	doneChannel <- struct{}{}
-	return nil
+	for {
+		select {
+		case <-ticker.C:
+			elapsedEpochs := t.getElapsedEpochs()
+
+			// Reduce bandwidth every two epochs
+			if reductionCount < elapsedEpochs/2 {
+				reduction := t.currentBandwidth * t.cfg.delta / 100
+				t.currentBandwidth -= reduction
+				if t.currentBandwidth < t.cfg.minBandwidth {
+					log.Info("Bandwidth dropped below minimum threshold, stopping test", "final_bandwidth", t.currentBandwidth, "min_bandwidth", t.cfg.minBandwidth)
+					doneChannel <- struct{}{}
+					return nil
+				}
+
+				if err := UpdateUploadBandwidthControl(service, t.currentBandwidth); err != nil {
+					log.Error("Failed to update bandwidth", "error", err, "epoch", elapsedEpochs, "bandwidth", t.currentBandwidth)
+					continue
+				}
+
+				log.Info("Reduced bandwidth", "epochs", elapsedEpochs, "new_bandwidth", FormatBandwidth(t.currentBandwidth))
+				reductionCount++
+			}
+		}
+	}
 }

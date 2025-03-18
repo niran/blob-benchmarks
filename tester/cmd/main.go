@@ -42,14 +42,20 @@ func main() {
 					&cli.IntFlag{
 						Name:    "bandwidth",
 						Aliases: []string{"bw"},
-						Usage:   "The initial bandwidth in megabits per second",
-						Value:   50,
+						Usage:   "The initial bandwidth in bits per second (underscores ok)",
+						Value:   50_000_000,
 					},
 					&cli.IntFlag{
 						Name:    "delta",
 						Aliases: []string{"d"},
 						Usage:   "The percentage to decrease the bandwidth by each iteration",
 						Value:   50,
+					},
+					&cli.IntFlag{
+						Name:    "min-bandwidth",
+						Aliases: []string{"mb"},
+						Usage:   "The minimum bandwidth to maintain in bits per second (underscores ok)",
+						Value:   500_000,
 					},
 				},
 				Action: minBandwidth,
@@ -106,7 +112,7 @@ func minBandwidth(ctx context.Context, cmd *cli.Command) error {
 
 	testDoneChannel := make(chan struct{})
 	go func() {
-		test := tester.NewMinBandwidthTest(enclaveContext, uint(cmd.Int("blobs")), uint(cmd.Int("bandwidth")), uint(cmd.Int("delta")))
+		test := tester.NewMinBandwidthTest(enclaveContext, uint(cmd.Int("blobs")), uint(cmd.Int("bandwidth")), uint(cmd.Int("min-bandwidth")), uint(cmd.Int("delta")))
 		err = test.Run(testDoneChannel)
 		if err != nil {
 			log.Crit("Test failed", "error", err)
