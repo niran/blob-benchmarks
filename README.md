@@ -3,6 +3,10 @@ Blob Benchmarks
 
 This repository scripts benchmarks for blobs within a Kurtosis environment. It also contains utilities for running a development binary in this environment rather than just the container images from ethpandaops.
 
+```bash
+go run ./tester/cmd min-bandwidth
+```
+
 ## Kurtosis Fork
 
 Our network benchmarks need to be able to reduce the bandwidth available to nodes that have been launched by the `ethpandaops/ethereum-package` Kurtosis package. The minimally invasive way to do this is to maintain a ~one line fork of Kurtosis that adds the `NET_ADMIN` capability to each container launched as a user service (i.e. containers other than the Kurtosis engine containers).
