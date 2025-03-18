@@ -97,11 +97,17 @@ func RemoveDownloadBandwidthControl(service *services.ServiceContext) error {
 }
 
 func RemoveBandwidthControls(service *services.ServiceContext) error {
-	if err := RemoveUploadBandwidthControl(service); err != nil {
-		return errors.Wrap(err, "failed to remove upload bandwidth control")
+	uploadErr := RemoveUploadBandwidthControl(service)
+	downloadErr := RemoveDownloadBandwidthControl(service)
+
+	if uploadErr != nil && downloadErr != nil {
+		return fmt.Errorf("failed to remove upload and download bandwidth controls: %s, %s", uploadErr, downloadErr)
 	}
-	if err := RemoveDownloadBandwidthControl(service); err != nil {
-		return errors.Wrap(err, "failed to remove download bandwidth control")
+	if uploadErr != nil {
+		return errors.Wrap(uploadErr, "failed to remove upload bandwidth control")
+	}
+	if downloadErr != nil {
+		return errors.Wrap(downloadErr, "failed to remove download bandwidth control")
 	}
 
 	return nil

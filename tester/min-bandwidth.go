@@ -43,11 +43,10 @@ func NewMinBandwidthTestForOnlyEnclave(ctx context.Context, blobsPerBlock uint, 
 
 func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 	// Get the service for the node whose bandwidth we want to limit.
-	service, err := t.cfg.enclaveContext.GetServiceContext("cl-1-prysm-geth")
+	service, err := GetServiceUnderTest(t.cfg.enclaveContext)
 	if err != nil {
-		return errors.Wrap(err, "failed to get service context")
+		return errors.Wrap(err, "failed to get service under test")
 	}
-	log.Info("Retrieved service context", "name", service.GetServiceName(), "uuid", service.GetServiceUUID())
 
 	// Install the tc command.
 	if err := InstallTcCommand(service); err != nil {
@@ -58,8 +57,6 @@ func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 	if err := RemoveBandwidthControls(service); err != nil {
 		log.Info("No existing bandwidth controls seem to be set, continuing...", "message", err)
 	}
-
-	defer RemoveBandwidthControls(service)
 
 	// Set the download bandwidth to a reasonable fixed value.
 	if err := SetDownloadBandwidthControl(service, "100mbit"); err != nil {

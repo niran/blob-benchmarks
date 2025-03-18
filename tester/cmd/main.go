@@ -104,12 +104,24 @@ func minBandwidth(ctx context.Context, cmd *cli.Command) error {
 		defer tester.CleanupEnclave(enclaveContext)
 	}
 
-	test := tester.NewMinBandwidthTest(enclaveContext, uint(cmd.Int("blobs")), uint(cmd.Int("bandwidth")), uint(cmd.Int("delta")))
 	testDoneChannel := make(chan struct{})
-	err = test.Run(testDoneChannel)
-	if err != nil {
-		return err
-	}
+	go func() {
+		test := tester.NewMinBandwidthTest(enclaveContext, uint(cmd.Int("blobs")), uint(cmd.Int("bandwidth")), uint(cmd.Int("delta")))
+		err = test.Run(testDoneChannel)
+		if err != nil {
+			log.Crit("Test failed", "error", err)
+		}
+	}()
+
+	defer func() {
+		log.Info("Cleaning up bandwidth controls...")
+		service, err := tester.GetServiceUnderTest(enclaveContext)
+		if err != nil {
+			log.Error("Failed to get service under test", "error", err)
+		}
+
+		tester.RemoveBandwidthControls(service)
+	}()
 
 	interruptChannel := make(chan os.Signal, 1)
 	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/kurtosis-tech/kurtosis/api/golang/core/lib/enclaves"
+	"github.com/kurtosis-tech/kurtosis/api/golang/core/lib/services"
 	"github.com/kurtosis-tech/kurtosis/api/golang/engine/kurtosis_engine_rpc_api_bindings"
 	"github.com/kurtosis-tech/kurtosis/api/golang/engine/lib/kurtosis_context"
 	"github.com/pkg/errors"
@@ -58,4 +60,13 @@ func GetOnlyEnclaveContext(ctx context.Context) (*enclaves.EnclaveContext, error
 
 func CleanupEnclave(enclaveContext *enclaves.EnclaveContext) {
 
+}
+
+func GetServiceUnderTest(enclaveContext *enclaves.EnclaveContext) (*services.ServiceContext, error) {
+	service, err := enclaveContext.GetServiceContext("cl-1-prysm-geth")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get service context")
+	}
+	log.Info("Retrieved service context", "name", service.GetServiceName(), "uuid", service.GetServiceUUID())
+	return service, nil
 }
