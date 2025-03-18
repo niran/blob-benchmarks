@@ -18,13 +18,16 @@ func main() {
 		Name:   "blob-benchmarks",
 		Usage:  "Determine the networking limits of a reproducible Ethereum network simulation",
 		Action: minBandwidth,
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "enclave",
-				Aliases: []string{"e"},
-				Usage:   "The name of a running enclave to use",
+		/*
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "enclave",
+					Aliases:  []string{"e"},
+					Usage:    "The name of a running enclave to use",
+					Required: false,
+				},
 			},
-		},
+		*/
 		Commands: []*cli.Command{
 			{
 				Name:  "min-bandwidth",
@@ -49,6 +52,7 @@ func main() {
 						Value:   50,
 					},
 				},
+				Action: minBandwidth,
 			},
 			{
 				Name:   "max-blobs",
@@ -87,10 +91,12 @@ func main() {
 func minBandwidth(ctx context.Context, cmd *cli.Command) error {
 	log.Info("Starting blob-benchmarks")
 
-	enclaveContext, err := tester.GetEnclaveContext(ctx, cmd.String("enclave"))
+	enclaveContext, err := tester.GetOnlyEnclaveContext(ctx)
 	if err != nil {
 		return err
 	}
+
+	log.Info("Retrieved enclave context", "name", enclaveContext.GetEnclaveName())
 
 	// TODO: If we created an enclave, defer its deletion.
 	createdEnclave := false
