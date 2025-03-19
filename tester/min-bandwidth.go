@@ -84,33 +84,35 @@ func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 		return errors.Wrap(err, "failed to set upload bandwidth control")
 	}
 
+	// TODO: Don't start the ticker until the genesis time has been reached and the desired fork has
+	// been activated.
 	reductionCount := uint(0)
 	ticker := time.NewTicker(slotDuration)
 	defer ticker.Stop()
 
 	for {
-		select {
-		case <-ticker.C:
-			elapsedEpochs := t.getElapsedEpochs()
+		<-ticker.C
+		elapsedEpochs := t.getElapsedEpochs()
 
-			// Reduce bandwidth every two epochs
-			if reductionCount < elapsedEpochs/2 {
-				reduction := t.currentBandwidth * t.cfg.delta / 100
-				t.currentBandwidth -= reduction
-				if t.currentBandwidth < t.cfg.minBandwidth {
-					log.Info("Bandwidth dropped below minimum threshold, stopping test", "final_bandwidth", t.currentBandwidth, "min_bandwidth", t.cfg.minBandwidth)
-					doneChannel <- struct{}{}
-					return nil
-				}
-
-				if err := UpdateUploadBandwidthControl(service, t.currentBandwidth); err != nil {
-					log.Error("Failed to update bandwidth", "error", err, "epoch", elapsedEpochs, "bandwidth", t.currentBandwidth)
-					continue
-				}
-
-				log.Info("Reduced bandwidth", "epochs", elapsedEpochs, "new_bandwidth", FormatBandwidth(t.currentBandwidth))
-				reductionCount++
+		// Reduce bandwidth every two epochs
+		if reductionCount < elapsedEpochs/2 {
+			reduction := t.currentBandwidth * t.cfg.delta / 100
+			if t.currentBandwidth-reduction < t.cfg.minBandwidth {
+				log.Info("Bandwidth dropped below minimum threshold, stopping test", "final_bandwidth", FormatBandwidth(t.currentBandwidth), "min_bandwidth", FormatBandwidth(t.cfg.minBandwidth))
+				doneChannel <- struct{}{}
+				return nil
 			}
+
+			t.currentBandwidth -= reduction
+
+			if err := UpdateUploadBandwidthControl(service, t.currentBandwidth); err != nil {
+				log.Error("Failed to update bandwidth", "error", err, "epoch", elapsedEpochs, "bandwidth", t.currentBandwidth)
+				continue
+			}
+
+			nextReduction := t.startTime.Add(slotDuration * time.Duration((elapsedEpochs+2)*slotsPerEpoch))
+			log.Info("Reduced bandwidth", "epochs", elapsedEpochs, "new_bandwidth", FormatBandwidth(t.currentBandwidth), "next_reduction_at", nextReduction.Local().Format("15:04:05"))
+			reductionCount++
 		}
 	}
 }
