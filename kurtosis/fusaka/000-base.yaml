@@ -1,4 +1,5 @@
 network_params:
+  # The devnet-5 version of geth segfaults if the fork epochs are set to 0.
   electra_fork_epoch: 1
   fulu_fork_epoch: 2
 dora_params:

@@ -5,6 +5,9 @@ participants:
     supernode: true
     cl_extra_params:
       - --minimum-peers-per-subnet=1
-    count: 3
+    el_type: geth
+    el_image: ethpandaops/geth:PeerDAS-7f6090b
+    validator_count: 1024
+    count: 4
 network_params:
-  genesis_delay: 300
+  genesis_delay: 60
