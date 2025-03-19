@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/kurtosis-tech/kurtosis/api/golang/core/lib/enclaves"
 	"github.com/niran/blob-benchmarks/tester"
 	"github.com/urfave/cli/v3"
 )
@@ -18,16 +19,14 @@ func main() {
 		Name:   "blob-benchmarks",
 		Usage:  "Determine the networking limits of a reproducible Ethereum network simulation",
 		Action: minBandwidth,
-		/*
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:     "enclave",
-					Aliases:  []string{"e"},
-					Usage:    "The name of a running enclave to use",
-					Required: false,
-				},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "enclave",
+				Aliases:  []string{"e"},
+				Usage:    "The name of a running enclave to use",
+				Required: false,
 			},
-		*/
+		},
 		Commands: []*cli.Command{
 			{
 				Name:  "min-bandwidth",
@@ -97,9 +96,18 @@ func main() {
 func minBandwidth(ctx context.Context, cmd *cli.Command) error {
 	log.Info("Starting blob-benchmarks")
 
-	enclaveContext, err := tester.GetOnlyEnclaveContext(ctx)
-	if err != nil {
-		return err
+	var enclaveContext *enclaves.EnclaveContext
+	var err error
+	if cmd.String("enclave") != "" {
+		enclaveContext, err = tester.GetEnclaveContext(ctx, cmd.String("enclave"))
+		if err != nil {
+			return err
+		}
+	} else {
+		enclaveContext, err = tester.GetOnlyEnclaveContext(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Info("Retrieved enclave context", "name", enclaveContext.GetEnclaveName())
