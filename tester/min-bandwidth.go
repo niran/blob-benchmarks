@@ -58,6 +58,16 @@ func (t *MinBandwidthTest) getElapsedEpochs() uint {
 }
 
 func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
+	grafanaBaseURL, grafanaToken, datasourceID, err := GetGrafanaConfig(t.cfg.enclaveContext)
+	if err != nil {
+		return errors.Wrap(err, "failed to get grafana config")
+	}
+
+	runner, err := SetupRunner(grafanaBaseURL, grafanaToken, datasourceID)
+	if err != nil {
+		return errors.Wrap(err, "failed to setup runner")
+	}
+
 	// Get the service for the node whose bandwidth we want to limit.
 	service, err := GetServiceUnderTest(t.cfg.enclaveContext)
 	if err != nil {
@@ -96,6 +106,15 @@ func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 
 		// Reduce bandwidth every two epochs
 		if reductionCount < elapsedEpochs/2 {
+			// Run the checks.
+			if err := runner.RunChecks(context.Background()); err != nil {
+				log.Error("Failed to run checks", "error", err)
+				continue
+			}
+
+			log.Info("Check results", "results", runner.GetResults())
+			log.Info("Check analysis", "analysis", runner.GetAnalysis())
+
 			reduction := t.currentBandwidth * t.cfg.delta / 100
 			if t.currentBandwidth-reduction < t.cfg.minBandwidth {
 				log.Info("Bandwidth dropped below minimum threshold, stopping test", "final_bandwidth", FormatBandwidth(t.currentBandwidth), "min_bandwidth", FormatBandwidth(t.cfg.minBandwidth))
