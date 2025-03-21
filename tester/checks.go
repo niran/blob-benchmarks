@@ -1,6 +1,8 @@
 package tester
 
 import (
+	"net/http"
+
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethpandaops/panda-pulse/pkg/checks"
 	"github.com/ethpandaops/panda-pulse/pkg/clients"
@@ -14,11 +16,12 @@ func SetupRunner(grafanaBaseURL string, grafanaToken string, datasourceID string
 		ExecutionNode: clients.ELGeth,
 	})
 
+	httpClient := &http.Client{}
 	grafanaClient := grafana.NewClient(&grafana.Config{
 		BaseURL:          grafanaBaseURL,
 		Token:            grafanaToken,
 		PromDatasourceID: datasourceID,
-	}, nil)
+	}, httpClient)
 
 	log.Debug("Grafana client", "client", grafanaClient)
 
