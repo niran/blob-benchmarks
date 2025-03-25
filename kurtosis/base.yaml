@@ -1,4 +1,5 @@
 # snooper_enabled: true
+ethereum_metrics_exporter_enabled: true
 global_log_level: debug
 additional_services:
   - dora

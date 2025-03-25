@@ -55,6 +55,7 @@ func GetGrafanaConfig(enclaveContext *enclaves.EnclaveContext) (string, string, 
 		if err != nil {
 			return "", "", "", errors.Wrap(err, "failed to create service account and token")
 		}
+		log.Info("Created service account", "token", apiToken)
 	}
 
 	datasourceID, isSet := os.LookupEnv("GRAFANA_DATASOURCE_ID")
@@ -63,6 +64,7 @@ func GetGrafanaConfig(enclaveContext *enclaves.EnclaveContext) (string, string, 
 		if err != nil {
 			return "", "", "", errors.Wrap(err, "failed to get datasource ID")
 		}
+		log.Info("Retrieved datasource ID", "id", datasourceID)
 	}
 
 	return grafanaBaseURL, apiToken, datasourceID, nil

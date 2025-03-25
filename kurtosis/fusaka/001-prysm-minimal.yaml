@@ -9,5 +9,14 @@ participants:
     el_image: ethpandaops/geth:PeerDAS-7f6090b
     validator_count: 1024
     count: 4
+    prometheus_config:
+      # Add labels that are expected by Panda Pulse
+      labels:
+        network: kurtosis
+        consensus_client: prysm
+        execution_client: geth
+        ingress_user: panda-pulse
+      # The config fails to parse without setting scrape_interval, so copy the default.
+      scrape_interval: 15s
 network_params:
   genesis_delay: 60

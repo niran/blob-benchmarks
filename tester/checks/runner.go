@@ -1,4 +1,4 @@
-package tester
+package checks
 
 import (
 	"net/http"
@@ -11,9 +11,9 @@ import (
 
 func SetupRunner(grafanaBaseURL string, grafanaToken string, datasourceID string) (checks.Runner, error) {
 	runner := checks.NewDefaultRunner(checks.Config{
-		Network:       "kurtosis",
+		Network: "kurtosis",
+		// RunChecks
 		ConsensusNode: clients.CLPrysm,
-		ExecutionNode: clients.ELGeth,
 	})
 
 	httpClient := &http.Client{}
@@ -27,9 +27,12 @@ func SetupRunner(grafanaBaseURL string, grafanaToken string, datasourceID string
 
 	runner.RegisterCheck(checks.NewCLSyncCheck(grafanaClient))
 	runner.RegisterCheck(checks.NewHeadSlotCheck(grafanaClient))
-	runner.RegisterCheck(checks.NewCLFinalizedEpochCheck(grafanaClient))
+	// CLFinalizedEpochCheck's query breaks when joining on `network`.
+	// runner.RegisterCheck(checks.NewCLFinalizedEpochCheck(grafanaClient))
 	runner.RegisterCheck(checks.NewELSyncCheck(grafanaClient))
 	runner.RegisterCheck(checks.NewELBlockHeightCheck(grafanaClient))
+	runner.RegisterCheck(NewFailedAttestationsCheck(grafanaClient))
+	runner.RegisterCheck(NewFailedProposalsCheck(grafanaClient))
 
 	return runner, nil
 }

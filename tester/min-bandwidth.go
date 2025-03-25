@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/kurtosis-tech/kurtosis/api/golang/core/lib/enclaves"
+	"github.com/niran/blob-benchmarks/tester/checks"
 	"github.com/pkg/errors"
 )
 
@@ -63,9 +64,17 @@ func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 		return errors.Wrap(err, "failed to get grafana config")
 	}
 
-	runner, err := SetupRunner(grafanaBaseURL, grafanaToken, datasourceID)
+	runner, err := checks.SetupRunner(grafanaBaseURL, grafanaToken, datasourceID)
 	if err != nil {
 		return errors.Wrap(err, "failed to setup runner")
+	}
+
+	if err := runner.RunChecks(context.Background()); err != nil {
+		log.Error("Failed to run checks", "error", err)
+	} else {
+		log.Info("Check results", "results", runner.GetResults())
+		log.Info("Check analysis", "analysis", runner.GetAnalysis())
+		log.Info("Check logs", "logs", runner.GetLog().GetBuffer().String())
 	}
 
 	// Get the service for the node whose bandwidth we want to limit.
@@ -109,11 +118,11 @@ func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 			// Run the checks.
 			if err := runner.RunChecks(context.Background()); err != nil {
 				log.Error("Failed to run checks", "error", err)
-				continue
+			} else {
+				log.Info("Check results", "results", runner.GetResults())
+				log.Info("Check analysis", "analysis", runner.GetAnalysis())
+				log.Info("Check logs", "logs", runner.GetLog().GetBuffer().String())
 			}
-
-			log.Info("Check results", "results", runner.GetResults())
-			log.Info("Check analysis", "analysis", runner.GetAnalysis())
 
 			reduction := t.currentBandwidth * t.cfg.delta / 100
 			if t.currentBandwidth-reduction < t.cfg.minBandwidth {
