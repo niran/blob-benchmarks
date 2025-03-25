@@ -74,7 +74,7 @@ func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 	} else {
 		log.Info("Check results", "results", runner.GetResults())
 		log.Info("Check analysis", "analysis", runner.GetAnalysis())
-		log.Info("Check logs", "logs", runner.GetLog().GetBuffer().String())
+		// log.Info("Check logs", "logs", runner.GetLog().GetBuffer().String())
 	}
 
 	// Get the service for the node whose bandwidth we want to limit.
@@ -121,7 +121,7 @@ func (t *MinBandwidthTest) Run(doneChannel chan struct{}) error {
 			} else {
 				log.Info("Check results", "results", runner.GetResults())
 				log.Info("Check analysis", "analysis", runner.GetAnalysis())
-				log.Info("Check logs", "logs", runner.GetLog().GetBuffer().String())
+				// log.Info("Check logs", "logs", runner.GetLog().GetBuffer().String())
 			}
 
 			reduction := t.currentBandwidth * t.cfg.delta / 100

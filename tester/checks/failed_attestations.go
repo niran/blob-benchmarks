@@ -13,7 +13,7 @@ import (
 )
 
 const queryFailedAttestations = `
-	validator_failed_attestations{network=~"%s", client_name=~"%s"} > 0
+  increase(sum by(service)(validator_failed_attestations{client_name=~"%s"})[5m:1m]) > 100
 `
 
 // FailedAttestationsCheck is a check that verifies if validators are failing attestations.
@@ -45,7 +45,7 @@ func (c *FailedAttestationsCheck) ClientType() clients.ClientType {
 
 // Run executes the check.
 func (c *FailedAttestationsCheck) Run(ctx context.Context, log *logger.CheckLogger, cfg checks.Config) (*checks.Result, error) {
-	query := fmt.Sprintf(queryFailedAttestations, cfg.Network, cfg.ConsensusNode)
+	query := fmt.Sprintf(queryFailedAttestations, cfg.ConsensusNode)
 
 	log.Print("\n=== Running failed attestations check")
 

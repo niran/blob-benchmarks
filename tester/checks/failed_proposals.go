@@ -13,7 +13,7 @@ import (
 )
 
 const queryFailedProposals = `
-	validator_failed_proposals{network=~"%s", client_name=~"%s"} > 0
+	increase(sum by(service)(validator_failed_proposals{client_name=~"%s"})[5m:1m]) > 2
 `
 
 // FailedProposalsCheck is a check that verifies if validators are failing proposals.
@@ -45,7 +45,7 @@ func (c *FailedProposalsCheck) ClientType() clients.ClientType {
 
 // Run executes the check.
 func (c *FailedProposalsCheck) Run(ctx context.Context, log *logger.CheckLogger, cfg checks.Config) (*checks.Result, error) {
-	query := fmt.Sprintf(queryFailedProposals, cfg.Network, cfg.ConsensusNode)
+	query := fmt.Sprintf(queryFailedProposals, cfg.ConsensusNode)
 
 	log.Print("\n=== Running failed proposals check")
 
