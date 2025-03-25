@@ -151,5 +151,6 @@ func minBandwidth(ctx context.Context, cmd *cli.Command) error {
 }
 
 func maxBlobs(ctx context.Context, cmd *cli.Command) error {
+	log.Error("Not implemented")
 	return nil
 }

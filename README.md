@@ -45,3 +45,9 @@ nix-shell -p rustc
 ./scripts/build.sh
 exit
 ```
+
+### Running Kurtosis
+
+```bash
+./kurtosis_helper.sh -k forks/kurtosis/cli/cli/dist/cli_darwin_arm64/kurtosis run kurtosis/fusaka/001-prysm-minimal.yaml
+```
